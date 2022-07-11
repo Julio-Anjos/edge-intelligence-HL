@@ -27,11 +27,10 @@ from flwr.common import (
     EvaluateRes,
     FitIns,
     FitRes,
-    GetParametersIns,
-    GetParametersRes,
-    GetPropertiesIns,
-    GetPropertiesRes,
     Metrics,
+    ParametersRes,
+    PropertiesIns,
+    PropertiesRes,
     Scalar,
     Status,
     parameters_to_weights,
@@ -77,7 +76,7 @@ class NumPyClient(ABC):
         ----------
         config : Config
             Configuration parameters requested by the server.
-            This can be used to tell the client which properties
+            This can be used to tell the client which parameters
             are needed along with some Scalar attributes.
 
         Returns
@@ -89,15 +88,8 @@ class NumPyClient(ABC):
         """
 
     @abstractmethod
-    def get_parameters(self, config: Dict[str, Scalar]) -> List[np.ndarray]:
+    def get_parameters(self) -> List[np.ndarray]:
         """Return the current local model parameters.
-
-        Parameters
-        ----------
-        config : Config
-            Configuration parameters requested by the server.
-            This can be used to tell the client which parameters
-            are needed along with some Scalar attributes.
 
         Returns
         -------
@@ -179,19 +171,19 @@ class NumPyClientWrapper(Client):
     def __init__(self, numpy_client: NumPyClient) -> None:
         self.numpy_client = numpy_client
 
-    def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
+    def get_properties(self, ins: PropertiesIns) -> PropertiesRes:
         """Return the current client properties."""
-        properties = self.numpy_client.get_properties(config=ins.config)
-        return GetPropertiesRes(
+        properties = self.numpy_client.get_properties(ins.config)
+        return PropertiesRes(
             status=Status(code=Code.OK, message="Success"),
             properties=properties,
         )
 
-    def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
+    def get_parameters(self) -> ParametersRes:
         """Return the current local model parameters."""
-        parameters = self.numpy_client.get_parameters(config=ins.config)
+        parameters = self.numpy_client.get_parameters()
         parameters_proto = weights_to_parameters(parameters)
-        return GetParametersRes(parameters=parameters_proto)
+        return ParametersRes(parameters=parameters_proto)
 
     def fit(self, ins: FitIns) -> FitRes:
         """Refine the provided weights using the locally held dataset."""

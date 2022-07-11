@@ -16,12 +16,13 @@
 
 import sys
 
-from . import client, server, simulation
+from . import client, server, simulation, combiner
 
 __all__ = [
     "client",
     "server",
     "simulation",
+    "combiner"
 ]
 
 # pylint: disable=import-error, no-name-in-module

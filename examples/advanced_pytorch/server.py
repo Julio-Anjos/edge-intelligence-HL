@@ -15,7 +15,6 @@ warnings.filterwarnings("ignore")
 
 def fit_config(rnd: int):
     """Return training configuration dict for each round.
-
     Keep batch size fixed at 32, perform two rounds of training with one
     local epoch, increase to two local epochs afterwards.
     """
@@ -28,7 +27,6 @@ def fit_config(rnd: int):
 
 def evaluate_config(rnd: int):
     """Return evaluation configuration dict for each round.
-
     Perform five local evaluation steps on each client (i.e., use five
     batches) during rounds one to three, then increase to ten local
     evaluation steps.
@@ -68,9 +66,10 @@ def get_eval_fn(model: torch.nn.Module, toy: bool):
 
 
 def main():
-    """Load model for
-    1. server-side parameter initialization
-    2. server-side parameter evaluation
+    """
+    # Load model for
+    # 1. server-side parameter initialization
+    # 2. server-side parameter evaluation
     """
 
     # Parse command line argument `partition`
@@ -94,8 +93,6 @@ def main():
     strategy = fl.server.strategy.FedAvg(
         fraction_fit=0.2,
         fraction_eval=0.2,
-        min_fit_clients=2,
-        min_eval_clients=2,
         min_available_clients=10,
         eval_fn=get_eval_fn(model, args.toy),
         on_fit_config_fn=fit_config,

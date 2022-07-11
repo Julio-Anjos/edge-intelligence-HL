@@ -36,25 +36,21 @@ class CifarClient(fl.client.Client):
 
     def __init__(
         self,
-        cid: str,
         model: cifar.Net,
         trainset: torchvision.datasets.CIFAR10,
         testset: torchvision.datasets.CIFAR10,
     ) -> None:
-        self.cid = cid
         self.model = model
         self.trainset = trainset
         self.testset = testset
 
     def get_parameters(self) -> ParametersRes:
-        print(f"Client {self.cid}: get_parameters")
 
         weights: Weights = self.model.get_weights()
         parameters = fl.common.weights_to_parameters(weights)
         return ParametersRes(parameters=parameters)
 
     def fit(self, ins: FitIns) -> FitRes:
-        print(f"Client {self.cid}: fit")
 
         weights: Weights = fl.common.parameters_to_weights(ins.parameters)
         config = ins.config
@@ -86,7 +82,6 @@ class CifarClient(fl.client.Client):
         )
 
     def evaluate(self, ins: EvaluateIns) -> EvaluateRes:
-        print(f"Client {self.cid}: evaluate")
 
         weights = fl.common.parameters_to_weights(ins.parameters)
 
@@ -107,25 +102,6 @@ class CifarClient(fl.client.Client):
 
 def main() -> None:
     """Load data, create and start CifarClient."""
-    parser = argparse.ArgumentParser(description="Flower")
-    parser.add_argument(
-        "--server_address",
-        type=str,
-        default=DEFAULT_SERVER_ADDRESS,
-        help=f"gRPC server address (default: {DEFAULT_SERVER_ADDRESS})",
-    )
-    parser.add_argument(
-        "--cid", type=str, required=True, help="Client CID (no default)"
-    )
-    parser.add_argument(
-        "--log_host",
-        type=str,
-        help="Logserver address (no default)",
-    )
-    args = parser.parse_args()
-
-    # Configure logger
-    fl.common.logger.configure(f"client_{args.cid}", host=args.log_host)
 
     # Load model and data
     model = cifar.load_model()
@@ -133,8 +109,8 @@ def main() -> None:
     trainset, testset = cifar.load_data()
 
     # Start client
-    client = CifarClient(args.cid, model, trainset, testset)
-    fl.client.start_client(args.server_address, client)
+    client = CifarClient(model, trainset, testset)
+    fl.client.start_client("[::]:8060", client)
 
 
 if __name__ == "__main__":

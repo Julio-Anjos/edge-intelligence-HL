@@ -22,44 +22,37 @@ from flwr.common import (
     EvaluateRes,
     FitIns,
     FitRes,
-    GetParametersIns,
-    GetParametersRes,
-    GetPropertiesIns,
-    GetPropertiesRes,
+    ParametersRes,
+    PropertiesIns,
+    PropertiesRes,
 )
 
 
 class Client(ABC):
     """Abstract base class for Flower clients."""
 
-    def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
+    def get_properties(self, ins: PropertiesIns) -> PropertiesRes:
         """Return set of client's properties.
 
         Parameters
         ----------
-        ins : GetPropertiesIns
+        ins : PropertiesIns
             The get properties instructions received from the server containing
-            a dictionary of configuration values.
+            a dictionary of configuration values used to configure.
 
         Returns
         -------
-        GetPropertiesRes
-            The current client properties.
+        PropertiesRes
+            Client's properties.
         """
 
     @abstractmethod
-    def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
+    def get_parameters(self) -> ParametersRes:
         """Return the current local model parameters.
-
-        Parameters
-        ----------
-        ins : GetParametersIns
-            The get parameters instructions received from the server containing
-            a dictionary of configuration values.
 
         Returns
         -------
-        GetParametersRes
+        ParametersRes
             The current local model parameters.
         """
 

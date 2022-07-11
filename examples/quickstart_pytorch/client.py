@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 warnings.filterwarnings("ignore", category=UserWarning)
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(DEVICE)
 
 
 class Net(nn.Module):
@@ -43,7 +44,7 @@ class Net(nn.Module):
 def train(net, trainloader, epochs):
     """Train the model on the training set."""
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = torch.optim.Adam(net.parameters(), lr=3e-4)
     for _ in range(epochs):
         for images, labels in tqdm(trainloader):
             optimizer.zero_grad()
@@ -78,7 +79,11 @@ def load_data():
 # #############################################################################
 
 # Load model and data (simple CNN, CIFAR-10)
-net = Net().to(DEVICE)
+torch.hub._validate_not_a_forked_repo=lambda a,b,c: True
+net = torch.hub.load(
+        "NVIDIA/DeepLearningExamples:torchhub", "nvidia_efficientnet_b0", pretrained=True
+    ).to(DEVICE)
+
 trainloader, testloader = load_data()
 
 # Define Flower client
@@ -99,8 +104,9 @@ class FlowerClient(fl.client.NumPyClient):
     def evaluate(self, parameters, config):
         self.set_parameters(parameters)
         loss, accuracy = test(net, testloader)
+        print(accuracy)
         return loss, len(testloader.dataset), {"accuracy": accuracy}
 
 
 # Start Flower client
-fl.client.start_numpy_client("[::]:8080", client=FlowerClient())
+fl.client.start_numpy_client("[::]:8060", client=FlowerClient())

@@ -15,10 +15,12 @@
 """Handle server messages by calling appropriate client methods."""
 
 
+from logging import INFO
 from typing import Tuple
 
 from flwr.client.client import Client, has_get_properties
 from flwr.common import serde, typing
+from flwr.common.logger import log
 from flwr.proto.transport_pb2 import ClientMessage, Reason, ServerMessage
 
 # pylint: disable=missing-function-docstring
@@ -53,11 +55,13 @@ def handle(
     if field == "reconnect":
         disconnect_msg, sleep_duration = _reconnect(server_msg.reconnect)
         return disconnect_msg, sleep_duration, False
-    if field == "get_properties_ins":
-        return _get_properties(client, server_msg.get_properties_ins), 0, True
-    if field == "get_parameters_ins":
-        return _get_parameters(client, server_msg.get_parameters_ins), 0, True
+    if field == "properties_ins":
+        return _get_properties(client, server_msg.properties_ins), 0, True
+    if field == "get_parameters":
+        log(INFO, "app_fit: losses_distributed")
+        return _get_parameters(client), 0, True
     if field == "fit_ins":
+        log(INFO, "fitting: losses_distributed")
         return _fit(client, server_msg.fit_ins), 0, True
     if field == "evaluate_ins":
         return _evaluate(client, server_msg.evaluate_ins), 0, True
@@ -79,40 +83,35 @@ def _reconnect(
 
 
 def _get_properties(
-    client: Client, get_properties_msg: ServerMessage.GetPropertiesIns
+    client: Client, properties_msg: ServerMessage.PropertiesIns
 ) -> ClientMessage:
     # Check if client overrides get_properties
     if not has_get_properties(client=client):
         # If client does not override get_properties, don't call it
-        get_properties_res = typing.GetPropertiesRes(
+        properties_res = typing.PropertiesRes(
             status=typing.Status(
                 code=typing.Code.GET_PARAMETERS_NOT_IMPLEMENTED,
                 message="Client does not implement get_properties",
             ),
             properties={},
         )
-        get_properties_res_proto = serde.get_properties_res_to_proto(get_properties_res)
-        return ClientMessage(get_properties_res=get_properties_res_proto)
+        properties_res_proto = serde.properties_res_to_proto(properties_res)
+        return ClientMessage(properties_res=properties_res_proto)
 
     # Deserialize get_properties instruction
-    get_properties_ins = serde.get_properties_ins_from_proto(get_properties_msg)
-    # Request properties
-    get_properties_res = client.get_properties(get_properties_ins)
+    properties_ins = serde.properties_ins_from_proto(properties_msg)
+    # Request for properties
+    properties_res = client.get_properties(properties_ins)
     # Serialize response
-    get_properties_res_proto = serde.get_properties_res_to_proto(get_properties_res)
-    return ClientMessage(get_properties_res=get_properties_res_proto)
+    properties_res_proto = serde.properties_res_to_proto(properties_res)
+    return ClientMessage(properties_res=properties_res_proto)
 
 
-def _get_parameters(
-    client: Client, get_parameters_msg: ServerMessage.GetParametersIns
-) -> ClientMessage:
-    # Deserialize get_properties instruction
-    get_parameters_ins = serde.get_parameters_ins_from_proto(get_parameters_msg)
-    # Request parameters
-    get_parameters_res = client.get_parameters(get_parameters_ins)
-    # Serialize response
-    get_parameters_res_proto = serde.get_parameters_res_to_proto(get_parameters_res)
-    return ClientMessage(get_parameters_res=get_parameters_res_proto)
+def _get_parameters(client: Client) -> ClientMessage:
+    # No need to deserialize get_parameters_msg (it's empty)
+    parameters_res = client.get_parameters()
+    parameters_res_proto = serde.parameters_res_to_proto(parameters_res)
+    return ClientMessage(parameters_res=parameters_res_proto)
 
 
 def _fit(client: Client, fit_msg: ServerMessage.FitIns) -> ClientMessage:

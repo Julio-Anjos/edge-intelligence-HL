@@ -6,9 +6,10 @@ import tensorflow as tf
 
 # Make TensorFlow log less verbose
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 # Load model and data (MobileNetV2, CIFAR-10)
-model = tf.keras.applications.MobileNetV2((32, 32, 3), classes=10, weights=None)
+model = tf.keras.applications.NASNetMobile((32, 32, 3), classes=10, weights=None)
 model.compile("adam", "sparse_categorical_crossentropy", metrics=["accuracy"])
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
@@ -29,4 +30,4 @@ class CifarClient(fl.client.NumPyClient):
 
 
 # Start Flower client
-fl.client.start_numpy_client("[::]:8080", client=CifarClient())
+fl.client.start_numpy_client("192.168.68.141:8060", client=CifarClient())

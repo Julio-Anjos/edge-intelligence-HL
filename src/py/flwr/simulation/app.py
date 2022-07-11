@@ -17,7 +17,7 @@
 
 import sys
 from logging import ERROR, INFO
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import ray
 
@@ -119,8 +119,7 @@ def start_simulation(  # pylint: disable=too-many-arguments
     keep_initialised: Optional[bool] (default: False)
         Set to True to prevent `ray.shutdown()` in case `ray.is_initialized()=True`.
 
-    Returns
-    -------
+    Returns:
         hist: flwr.server.history.History. Object containing metrics from training.
     """
     # pylint: disable-msg=too-many-locals
@@ -160,14 +159,9 @@ def start_simulation(  # pylint: disable=too-many-arguments
     )
 
     # Initialize server and server config
-    config: Optional[Dict[str, Union[int, Optional[float]]]] = {
-        "num_rounds": num_rounds
-    }
+    config = {"num_rounds": num_rounds}
     initialized_server, initialized_config = _init_defaults(
-        server=None,
-        config=config,
-        strategy=strategy,
-        client_manager=client_manager,
+        None, config, strategy, client_manager
     )
     log(
         INFO,
